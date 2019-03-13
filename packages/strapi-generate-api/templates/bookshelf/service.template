@@ -151,10 +151,6 @@ module.exports = {
       .filter(attribute => attribute !== <%= globalID %>.primaryKey && !associations.includes(attribute))
       .filter(attribute => ['string', 'text'].includes(<%= globalID %>._attributes[attribute].type));
 
-    const searchNoText = Object.keys(<%= globalID %>._attributes)
-      .filter(attribute => attribute !== <%= globalID %>.primaryKey && !associations.includes(attribute))
-      .filter(attribute => !['string', 'text', 'boolean', 'integer', 'decimal', 'float'].includes(<%= globalID %>._attributes[attribute].type));
-
     const searchInt = Object.keys(<%= globalID %>._attributes)
       .filter(attribute => attribute !== <%= globalID %>.primaryKey && !associations.includes(attribute))
       .filter(attribute => ['integer', 'decimal', 'float'].includes(<%= globalID %>._attributes[attribute].type));
@@ -166,11 +162,6 @@ module.exports = {
     const query = (params._q || '').replace(/[^a-zA-Z0-9.-\s]+/g, '');
 
     return <%= globalID %>.query(qb => {
-      // Search in columns which are not text value.
-      searchNoText.forEach(attribute => {
-        qb.orWhereRaw(`LOWER(${attribute}) LIKE '%${_.toLower(query)}%'`);
-      });
-
       if (!_.isNaN(_.toNumber(query))) {
         searchInt.forEach(attribute => {
           qb.orWhereRaw(`${attribute} = ${_.toNumber(query)}`);

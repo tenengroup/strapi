@@ -26,10 +26,6 @@ module.exports = {
       .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
       .filter(attribute => ['string', 'text'].includes(this._attributes[attribute].type));
 
-    const searchNoText = Object.keys(this._attributes)
-      .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
-      .filter(attribute => !['string', 'text', 'boolean', 'integer', 'decimal', 'float'].includes(this._attributes[attribute].type));
-
     const searchInt = Object.keys(this._attributes)
       .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
       .filter(attribute => ['integer','biginteger', 'decimal', 'float'].includes(this._attributes[attribute].type));
@@ -41,11 +37,6 @@ module.exports = {
     const query = (params.search || '').replace(/[^a-zA-Z0-9.-\s]+/g, '');
 
     return this.query(qb => {
-      // Search in columns which are not text value.
-      searchNoText.forEach(attribute => {
-        qb.orWhereRaw(`LOWER(${attribute}) LIKE '%${_.toLower(query)}%'`);
-      });
-
       if (!_.isNaN(_.toNumber(query))) {
         searchInt.forEach(attribute => {
           qb.orWhereRaw(`${attribute} = ${_.toNumber(query)}`);
@@ -91,7 +82,7 @@ module.exports = {
         qb.limit(_.toNumber(params.limit));
       }
     }).fetchAll({
-      width: populate || associations
+      withRelated: populate || associations
     }).then(data => raw ? data.toJSON() : data);
   },
 
@@ -100,10 +91,6 @@ module.exports = {
     const searchText = Object.keys(this._attributes)
       .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
       .filter(attribute => ['string', 'text'].includes(this._attributes[attribute].type));
-
-    const searchNoText = Object.keys(this._attributes)
-      .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
-      .filter(attribute => !['string', 'text', 'boolean', 'integer', 'biginteger', 'decimal', 'float'].includes(this._attributes[attribute].type));
 
     const searchInt = Object.keys(this._attributes)
       .filter(attribute => attribute !== this.primaryKey && !associations.includes(attribute))
@@ -117,11 +104,6 @@ module.exports = {
 
 
     return this.query(qb => {
-      // Search in columns which are not text value.
-      searchNoText.forEach(attribute => {
-        qb.orWhereRaw(`LOWER(${attribute}) LIKE '%${_.toLower(query)}%'`);
-      });
-
       if (!_.isNaN(_.toNumber(query))) {
         searchInt.forEach(attribute => {
           qb.orWhereRaw(`${attribute} = ${_.toNumber(query)}`);

@@ -17,6 +17,6 @@ module.exports = {
   policy: require('./policy'),
   regex: require('./regex'),
   templateConfiguration: require('./templateConfiguration'),
-  Query: require('./query').Query,
+  Query: require('./query'),
   Builder: require('./builder').Builder
 };
