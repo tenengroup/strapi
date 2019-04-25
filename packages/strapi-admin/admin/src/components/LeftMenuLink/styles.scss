@@ -42,19 +42,20 @@
 .link {
   padding-top: .9rem;
   padding-bottom: 0.2rem;
-  padding-left: 1.6rem;
+  //padding-left: 0.1rem;
   min-height: 3.6rem;
-  border-left: 0.3rem solid transparent;
+  //border-left: 0.3rem solid transparent;
   cursor: pointer;
   color: $left-menu-link-color;
   text-decoration: none;
   display: block;
   -webkit-font-smoothing: antialiased;
+  white-space: nowrap;
 
   &:hover {
     color: $white;
     background: $left-menu-link-hover;
-    border-left: 0.3rem solid $strapi-blue;
+    //border-left: 0.3rem solid $strapi-blue;
     text-decoration: none;
   }
 
@@ -75,7 +76,7 @@
 
 .linkIcon {
   position: relative;
-  margin-right: 1.2rem;
+  margin-right: 0rem;
   font-size: 1.2rem;
   width: 1.4rem;
   height: 1.2rem;
@@ -86,4 +87,5 @@
 .linkLabel {
   display: inline-block;
   padding-right: 1rem;
+  font-size: 1.2rem;
 }
