@@ -1,6 +1,6 @@
 {
   "name": "strapi-provider-email-mailgun",
-  "version": "3.0.0-alpha.24.1",
+  "version": "3.0.0-beta.11",
   "description": "Mailgun provider for strapi email plugin",
   "homepage": "http://strapi.io",
   "keywords": [
@@ -13,7 +13,8 @@
   },
   "main": "./lib",
   "dependencies": {
-    "mailgun-js": "0.18.0"
+    "lodash": "^4.17.11",
+    "mailgun-js": "0.22.0"
   },
   "strapi": {
     "isProvider": true
@@ -44,5 +45,6 @@
   "license": "MIT",
   "scripts": {
     "test": "echo \"no tests yet\""
-  }
+  },
+  "gitHead": "c85658a19b8fef0f3164c19693a45db305dc07a9"
 }

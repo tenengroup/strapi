@@ -10,8 +10,6 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
 import { bindActionCreators, compose } from 'redux';
-import 'flag-icon-css/css/flag-icon.css';
-import 'react-select/dist/react-select.css';
 import { Switch, Route } from 'react-router-dom';
 import { isEmpty } from 'lodash';
 
@@ -34,7 +32,10 @@ class App extends React.Component {
   }
 
   componentWillUpdate(nextProps) {
-    if (!isEmpty(nextProps.sections) && nextProps.location.pathname !== '/plugins/settings-manager') {
+    if (
+      !isEmpty(nextProps.sections) &&
+      nextProps.location.pathname !== '/plugins/settings-manager'
+    ) {
       const allowedPaths = nextProps.sections.reduce((acc, current) => {
         const slugs = current.items.reduce((acc, current) => {
           acc.push(current.slug);
@@ -45,7 +46,8 @@ class App extends React.Component {
       }, []);
 
       const slug = nextProps.location.pathname.split('/')[3];
-      const shouldRedirect = allowedPaths.filter(el => el === slug).length === 0;
+      const shouldRedirect =
+        allowedPaths.filter(el => el === slug).length === 0;
 
       if (shouldRedirect) {
         this.props.history.push('/404');
@@ -55,9 +57,12 @@ class App extends React.Component {
 
   render() {
     return (
-      <div className={`${pluginId} ${styles.app}`}>
+      <div className={`${pluginId} ${styles.stmapp}`}>
         <Switch>
-          <Route path="/plugins/settings-manager/:slug/:env" component={HomePage} />
+          <Route
+            path="/plugins/settings-manager/:slug/:env"
+            component={HomePage}
+          />
           <Route path="/plugins/settings-manager/:slug" component={HomePage} />
           <Route path="/plugins/settings-manager" component={HomePage} />
         </Switch>
@@ -66,13 +71,10 @@ class App extends React.Component {
   }
 }
 
-App.contextTypes = {
-  router: PropTypes.object.isRequired,
-};
-
 App.propTypes = {
   environmentsFetch: PropTypes.func.isRequired,
   history: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
   menuFetch: PropTypes.func.isRequired,
   sections: PropTypes.array.isRequired,
 };
@@ -93,7 +95,10 @@ const mapStateToProps = createStructuredSelector({
 });
 
 // Wrap the component to inject dispatch and state into it
-const withConnect = connect(mapStateToProps, mapDispatchToProps);
+const withConnect = connect(
+  mapStateToProps,
+  mapDispatchToProps
+);
 
 const withReducer = strapi.injectReducer({ key: 'global', reducer, pluginId });
 const withSaga = strapi.injectSaga({ key: 'global', saga, pluginId });
@@ -101,5 +106,5 @@ const withSaga = strapi.injectSaga({ key: 'global', saga, pluginId });
 export default compose(
   withReducer,
   withSaga,
-  withConnect,
+  withConnect
 )(App);
