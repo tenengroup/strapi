@@ -30,4 +30,12 @@ module.exports = {
     .default,
   'strapi-plugin-upload': require('../../../strapi-plugin-upload/admin/src')
     .default,
+
+// Only for development. We do not deploy code from this repo anymore
+  'strapi-plugin-tg-site-catalog': require('../../../../../tg-catalog/plugins/tg-site-catalog/admin/src')
+    .default,
+  'strapi-plugin-tg-master-catalog': require('../../../../../tg-catalog/plugins/tg-master-catalog/admin/src')
+    .default,
+  'strapi-plugin-tg-component-catalog': require('../../../../../tg-catalog/plugins/tg-component-catalog/admin/src')
+    .default,
 };
