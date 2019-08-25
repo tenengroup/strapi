@@ -21,7 +21,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
-import { merge } from 'lodash';
+import { merge, set } from 'lodash';
 import {
   freezeApp,
   pluginLoaded,
@@ -50,47 +50,56 @@ import history from './utils/history';
 
 import plugins from './plugins';
 
+import { request } from 'strapi-helper-plugin';
+
 const initialState = {};
 const store = configureStore(initialState, history);
 const { dispatch } = store;
 const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
-dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
+request('/users-permissions/custom-plugins').then(customPlugins => {
+  customPlugins.forEach(plugin => {
+    set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
+  });
 
-Object.keys(plugins).forEach(plugin => {
-  const currentPlugin = plugins[plugin];
+  dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
 
-  const pluginTradsPrefixed = languages.reduce((acc, lang) => {
-    const currentLocale = currentPlugin.trads[lang];
+  Object.keys(plugins).forEach(plugin => {
+    const currentPlugin = plugins[plugin];
 
-    if (currentLocale) {
-      const localeprefixedWithPluginId = Object.keys(currentLocale).reduce(
-        (acc2, current) => {
-          acc2[`${plugins[plugin].id}.${current}`] = currentLocale[current];
+    const pluginTradsPrefixed = languages.reduce((acc, lang) => {
+      const currentLocale = currentPlugin.trads[lang];
 
-          return acc2;
-        },
+      if (currentLocale) {
+        const localeprefixedWithPluginId = Object.keys(currentLocale).reduce(
+          (acc2, current) => {
+            acc2[`${plugins[plugin].id}.${current}`] = currentLocale[current];
+
+            return acc2;
+          },
         {}
-      );
+        );
 
-      acc[lang] = localeprefixedWithPluginId;
+        acc[lang] = localeprefixedWithPluginId;
+      }
+
+      return acc;
+    }, {});
+
+    try {
+      merge(translationMessages, pluginTradsPrefixed);
+      dispatch(pluginLoaded(currentPlugin));
+    } catch (err) {
+      console.error(err);
     }
+  });
 
-    return acc;
-  }, {});
-
-  try {
-    merge(translationMessages, pluginTradsPrefixed);
-    dispatch(pluginLoaded(currentPlugin));
-  } catch (err) {
-    console.log({ err });
-  }
 });
 
 // TODO
 const remoteURL = (() => {
-    // Relative URL (ex: /dashboard)
+  // Relative URL (ex: /dashboard)
   if (REMOTE_URL[0] === '/') {
     return (window.location.origin + REMOTE_URL).replace(/\/$/, '');
   }
