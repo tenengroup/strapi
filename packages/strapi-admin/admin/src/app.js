@@ -65,41 +65,41 @@ request('/users-permissions/custom-plugins').then(customPlugins => {
 
   dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
 
-  Object.keys(plugins).forEach(plugin => {
-    const currentPlugin = plugins[plugin];
+Object.keys(plugins).forEach(plugin => {
+  const currentPlugin = plugins[plugin];
 
-    const pluginTradsPrefixed = languages.reduce((acc, lang) => {
-      const currentLocale = currentPlugin.trads[lang];
+  const pluginTradsPrefixed = languages.reduce((acc, lang) => {
+    const currentLocale = currentPlugin.trads[lang];
 
-      if (currentLocale) {
-        const localeprefixedWithPluginId = Object.keys(currentLocale).reduce(
-          (acc2, current) => {
-            acc2[`${plugins[plugin].id}.${current}`] = currentLocale[current];
+    if (currentLocale) {
+      const localeprefixedWithPluginId = Object.keys(currentLocale).reduce(
+        (acc2, current) => {
+          acc2[`${plugins[plugin].id}.${current}`] = currentLocale[current];
 
-            return acc2;
-          },
+          return acc2;
+        },
         {}
-        );
+      );
 
-        acc[lang] = localeprefixedWithPluginId;
-      }
-
-      return acc;
-    }, {});
-
-    try {
-      merge(translationMessages, pluginTradsPrefixed);
-      dispatch(pluginLoaded(currentPlugin));
-    } catch (err) {
-      console.error(err);
+      acc[lang] = localeprefixedWithPluginId;
     }
-  });
 
+    return acc;
+  }, {});
+
+  try {
+    merge(translationMessages, pluginTradsPrefixed);
+    dispatch(pluginLoaded(currentPlugin));
+  } catch (err) {
+    console.log({ err });
+  }
 });
+
+  });
 
 // TODO
 const remoteURL = (() => {
-  // Relative URL (ex: /dashboard)
+    // Relative URL (ex: /dashboard)
   if (REMOTE_URL[0] === '/') {
     return (window.location.origin + REMOTE_URL).replace(/\/$/, '');
   }
