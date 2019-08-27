@@ -21,7 +21,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
-import { merge } from 'lodash';
+import { merge, set } from 'lodash';
 import {
   freezeApp,
   pluginLoaded,
@@ -50,13 +50,20 @@ import history from './utils/history';
 
 import plugins from './plugins';
 
+import { request } from 'strapi-helper-plugin';
+
 const initialState = {};
 const store = configureStore(initialState, history);
 const { dispatch } = store;
 const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
-dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
+request('/users-permissions/custom-plugins').then(customPlugins => {
+  customPlugins.forEach(plugin => {
+    set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
+  });
+
+  dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
 
 Object.keys(plugins).forEach(plugin => {
   const currentPlugin = plugins[plugin];
@@ -87,6 +94,8 @@ Object.keys(plugins).forEach(plugin => {
     console.log({ err });
   }
 });
+
+  });
 
 // TODO
 const remoteURL = (() => {
