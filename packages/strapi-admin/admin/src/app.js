@@ -58,7 +58,9 @@ const { dispatch } = store;
 const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
-request('/users-permissions/custom-plugins').then(customPlugins => {
+const customPlugins = ['tg-option-catalog'];
+
+{
   customPlugins.forEach(plugin => {
     set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
   });
@@ -95,7 +97,7 @@ Object.keys(plugins).forEach(plugin => {
   }
 });
 
-  });
+  };
 
 // TODO
 const remoteURL = (() => {
