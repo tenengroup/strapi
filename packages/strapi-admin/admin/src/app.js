@@ -59,7 +59,7 @@ const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
 // TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
-const customPlugins = ['tg-option-catalog'];
+const customPlugins = ['tg-standalone-catalog'];
 
 {
   customPlugins.forEach(plugin => {
