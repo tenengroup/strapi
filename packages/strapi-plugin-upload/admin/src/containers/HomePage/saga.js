@@ -51,15 +51,13 @@ function* dataGet() {
 function* uploadFiles(action) {
   try {
     yield put(setLoading());
-    const headers = {
-      'X-Forwarded-Host': 'strapi',
-    };
+    const headers = {};
     const response = yield call(
       request,
       '/upload',
       { method: 'POST', headers, body: action.formData },
       false,
-      false,
+      false
     );
     const newFiles = response.map(file => Map(file));
 
@@ -103,10 +101,10 @@ function* search() {
       : '/upload/files';
     const params = isEmpty(search)
       ? {
-        _limit: pageParams._limit,
-        _sort: pageParams._sort,
-        _start,
-      }
+          _limit: pageParams._limit,
+          _sort: pageParams._sort,
+          _start,
+        }
       : {};
     const response = yield call(request, requestURL, { method: 'GET', params });
     const entries = response.length === 0 ? [] : response.map(obj => Map(obj));

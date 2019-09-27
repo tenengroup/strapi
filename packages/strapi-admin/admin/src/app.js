@@ -9,9 +9,7 @@ import '@babel/polyfill';
 import 'sanitize.css/sanitize.css';
 
 // Third party css library needed
-// Currently unable to bundle them
 
-import 'react-select/dist/react-select.css';
 import 'react-datetime/css/react-datetime.css';
 
 import './styles/main.scss';
@@ -27,7 +25,6 @@ import {
   pluginLoaded,
   unfreezeApp,
   updatePlugin,
-  getAppPluginsSucceeded,
 } from './containers/App/actions';
 import { showNotification } from './containers/NotificationProvider/actions';
 
@@ -58,15 +55,13 @@ const { dispatch } = store;
 const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
-// TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
+
+  // TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
 const customPlugins = ['tg-standalone-catalog'];
 
-{
-  customPlugins.forEach(plugin => {
-    set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
-  });
-
-  dispatch(getAppPluginsSucceeded(Object.keys(plugins)));
+customPlugins.forEach(plugin => {
+  set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
+});
 
 Object.keys(plugins).forEach(plugin => {
   const currentPlugin = plugins[plugin];
@@ -102,7 +97,7 @@ Object.keys(plugins).forEach(plugin => {
 
 // TODO
 const remoteURL = (() => {
-    // Relative URL (ex: /dashboard)
+  // Relative URL (ex: /dashboard)
   if (REMOTE_URL[0] === '/') {
     return (window.location.origin + REMOTE_URL).replace(/\/$/, '');
   }
@@ -194,7 +189,7 @@ if (NODE_ENV !== 'test') {
           import('intl/locale-data/jsonp/en.js'),
           import('intl/locale-data/jsonp/de.js'),
         ])
-      ) // eslint-disable-line prettier/prettier
+      )
       .then(() => render(translationMessages))
       .catch(err => {
         throw err;

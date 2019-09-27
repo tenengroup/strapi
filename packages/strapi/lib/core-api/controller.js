@@ -1,22 +1,32 @@
 'use strict';
 
+const { parseMultipartData, sanitizeEntity } = require('strapi-utils');
+
 /**
  * default bookshelf controller
  *
  */
-module.exports = ({ service }) => {
+module.exports = ({ service, model }) => {
   return {
+    /**
+     * expose some utils so the end users can use them
+     */
+
     /**
      * Retrieve records.
      *
      * @return {Object|Array}
      */
 
-    find(ctx) {
+    async find(ctx) {
+      let entities;
       if (ctx.query._q) {
-        return service.search(ctx.query);
+        entities = await service.search(ctx.query);
+      } else {
+        entities = await service.find(ctx.query);
       }
-      return service.find(ctx.query);
+
+      return entities.map(entity => sanitizeEntity(entity, { model }));
     },
 
     /**
@@ -25,8 +35,9 @@ module.exports = ({ service }) => {
      * @return {Object}
      */
 
-    findOne(ctx) {
-      return service.findOne(ctx.params);
+    async findOne(ctx) {
+      const entity = await service.findOne(ctx.params);
+      return sanitizeEntity(entity, { model });
     },
 
     /**
@@ -48,8 +59,15 @@ module.exports = ({ service }) => {
      * @return {Object}
      */
 
-    create(ctx) {
-      return service.create(ctx.request.body);
+    async create(ctx) {
+      let entity;
+      if (ctx.is('multipart')) {
+        const { data, files } = parseMultipartData(ctx);
+        entity = await service.create(data, { files });
+      } else {
+        entity = await service.create(ctx.request.body);
+      }
+      return sanitizeEntity(entity, { model });
     },
 
     /**
@@ -58,8 +76,16 @@ module.exports = ({ service }) => {
      * @return {Object}
      */
 
-    update(ctx) {
-      return service.update(ctx.params, ctx.request.body);
+    async update(ctx) {
+      let entity;
+      if (ctx.is('multipart')) {
+        const { data, files } = parseMultipartData(ctx);
+        entity = await service.update(ctx.params, data, { files });
+      } else {
+        entity = await service.update(ctx.params, ctx.request.body);
+      }
+
+      return sanitizeEntity(entity, { model });
     },
 
     /**
@@ -68,8 +94,9 @@ module.exports = ({ service }) => {
      * @return {Object}
      */
 
-    delete(ctx) {
-      return service.delete(ctx.params);
+    async delete(ctx) {
+      const entity = await service.delete(ctx.params);
+      return sanitizeEntity(entity, { model });
     },
   };
 };

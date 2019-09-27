@@ -3,12 +3,27 @@
 const execa = require('execa');
 const _ = require('lodash');
 
+const formatError = error => [
+  { messages: [{ id: error.id, message: error.message, field: error.field }] },
+];
+
 /**
  * A set of functions called "actions" for `Admin`
  */
 
 module.exports = {
-  getCurrentEnvironment: async ctx => {
+  async init(ctx) {
+    const uuid = _.get(strapi, ['config', 'uuid'], false);
+    const currentEnvironment = strapi.app.env;
+    const autoReload = _.get(strapi, ['config', 'autoReload'], false);
+    const strapiVersion = _.get(strapi.config, 'info.strapi', null);
+
+    return ctx.send({
+      data: { uuid, currentEnvironment, autoReload, strapiVersion },
+    });
+  },
+
+  async getCurrentEnvironment(ctx) {
     try {
       const autoReload = strapi.config.autoReload;
       return ctx.send({ autoReload, currentEnvironment: strapi.app.env });
@@ -17,7 +32,7 @@ module.exports = {
     }
   },
 
-  getStrapiVersion: async ctx => {
+  async getStrapiVersion(ctx) {
     try {
       const strapiVersion = _.get(strapi.config, 'info.strapi', null);
       return ctx.send({ strapiVersion });
@@ -28,7 +43,7 @@ module.exports = {
     }
   },
 
-  getGaConfig: async ctx => {
+  async getGaConfig(ctx) {
     try {
       ctx.send({ uuid: _.get(strapi.config, 'uuid', false) });
     } catch (err) {
@@ -36,7 +51,7 @@ module.exports = {
     }
   },
 
-  getLayout: async ctx => {
+  async getLayout(ctx) {
     try {
       const layout = require('../config/layout.js');
 
@@ -48,7 +63,7 @@ module.exports = {
     }
   },
 
-  installPlugin: async ctx => {
+  async installPlugin(ctx) {
     try {
       const { plugin } = ctx.request.body;
       strapi.reload.isWatching = false;
@@ -66,7 +81,7 @@ module.exports = {
     }
   },
 
-  plugins: async ctx => {
+  async plugins(ctx) {
     try {
       const plugins = Object.keys(strapi.plugins).reduce((acc, key) => {
         acc[key] = _.get(strapi.plugins, [key, 'package', 'strapi'], {
@@ -83,7 +98,7 @@ module.exports = {
     }
   },
 
-  uninstallPlugin: async ctx => {
+  async uninstallPlugin(ctx) {
     try {
       const { plugin } = ctx.params;
       strapi.reload.isWatching = false;
@@ -108,66 +123,82 @@ module.exports = {
    */
 
   async create(ctx) {
-    const values = ctx.request.body;
+    const { email, username, password, blocked } = ctx.request.body;
 
-    if (!values.email) return ctx.badRequest('Missing email');
-    if (!values.username) return ctx.badRequest('Missing username');
-    if (!values.password) return ctx.badRequest('Missing password');
-
-    const adminQueries = strapi.admin.queries('administrator', 'admin');
-
-    const adminsWithSameEmail = await adminQueries.find({
-      email: values.email,
-    });
-
-    const adminsWithSameUsername = await adminQueries.find({
-      username: values.username,
-    });
-
-    if (adminsWithSameEmail.length > 0) {
+    if (!email) {
       return ctx.badRequest(
         null,
-        ctx.request.admin
-          ? [
-              {
-                messages: [
-                  { id: 'Auth.form.error.email.taken', field: ['email'] },
-                ],
-              },
-            ]
-          : 'Email is already taken.'
+        formatError({
+          id: 'missing.email',
+          message: 'Missing email',
+          field: ['email'],
+        })
       );
     }
 
-    if (adminsWithSameUsername.length > 0) {
+    if (!username) {
       return ctx.badRequest(
         null,
-        ctx.request.admin
-          ? [
-              {
-                messages: [
-                  {
-                    id: 'Auth.form.error.username.taken',
-                    field: ['username'],
-                  },
-                ],
-              },
-            ]
-          : 'Username is already taken.'
+        formatError({
+          id: 'missing.username',
+          message: 'Missing username',
+          field: ['username'],
+        })
+      );
+    }
+
+    if (!password) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'missing.password',
+          message: 'Missing password',
+          field: ['password'],
+        })
+      );
+    }
+
+    const adminsWithSameEmail = await strapi
+      .query('administrator', 'admin')
+      .findOne({ email });
+
+    const adminsWithSameUsername = await strapi
+      .query('administrator', 'admin')
+      .findOne({ username });
+
+    if (adminsWithSameEmail) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'Auth.form.error.email.taken',
+          message: 'Email already taken',
+          field: ['email'],
+        })
+      );
+    }
+
+    if (adminsWithSameUsername) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'Auth.form.error.username.taken',
+          message: 'Username already taken',
+          field: ['username'],
+        })
       );
     }
 
     const user = {
-      email: values.email,
-      username: values.username,
-      blocked: values.blocked === true ? true : false,
-      password: await strapi.admin.services.auth.hashPassword(values.password),
+      email: email,
+      username: username,
+      blocked: blocked === true ? true : false,
+      password: await strapi.admin.services.auth.hashPassword(password),
     };
 
-    const data = await adminQueries.create(user);
+    const data = await strapi.query('administrator', 'admin').create(user);
 
     // Send 201 `created`
-    ctx.created(_.omit(data, ['password']));
+    ctx.created(strapi.admin.services.auth.sanitizeUser(data));
   },
 
   /**
@@ -177,86 +208,97 @@ module.exports = {
    */
 
   async update(ctx) {
-    const values = ctx.request.body;
+    const { id } = ctx.params;
+    const { email, username, password, blocked } = ctx.request.body;
 
-    if (!values.email) return ctx.badRequest('Missing email');
-    if (!values.username) return ctx.badRequest('Missing username');
-    if (!values.password) return ctx.badRequest('Missing password');
+    if (!email) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'missing.email',
+          message: 'Missing email',
+          field: ['email'],
+        })
+      );
+    }
 
-    const adminQueries = strapi.admin.queries('administrator', 'admin');
-    const { primaryKey } = adminQueries;
+    if (!username) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'missing.username',
+          message: 'Missing username',
+          field: ['username'],
+        })
+      );
+    }
 
-    const admin = await adminQueries.findOne(ctx.params);
+    if (!password) {
+      return ctx.badRequest(
+        null,
+        formatError({
+          id: 'missing.password',
+          message: 'Missing password',
+          field: ['password'],
+        })
+      );
+    }
+    const admin = await strapi
+      .query('administrator', 'admin')
+      .findOne(ctx.params);
 
     // check the user exists
     if (!admin) return ctx.notFound('Administrator not found');
 
     // check there are not user with requested email
-    if (values.email !== admin.email) {
-      const adminsWithSameEmail = await adminQueries.findOne({
-        email: values.email,
-      });
+    if (email !== admin.email) {
+      const adminsWithSameEmail = await strapi
+        .query('administrator', 'admin')
+        .findOne({ email });
 
-      if (
-        adminsWithSameEmail &&
-        adminsWithSameEmail[primaryKey] !== admin[primaryKey]
-      ) {
+      if (adminsWithSameEmail && adminsWithSameEmail.id !== admin.id) {
         return ctx.badRequest(
           null,
-          ctx.request.admin
-            ? [
-                {
-                  messages: [
-                    { id: 'Auth.form.error.email.taken', field: ['email'] },
-                  ],
-                },
-              ]
-            : 'Email is already taken.'
+          formatError({
+            id: 'Auth.form.error.email.taken',
+            message: 'Email already taken',
+            field: ['email'],
+          })
         );
       }
     }
 
     // check there are not user with requested username
-    if (values.username !== admin.username) {
-      const adminsWithSameUsername = await adminQueries.findOne({
-        username: values.username,
-      });
+    if (username !== admin.username) {
+      const adminsWithSameUsername = await strapi
+        .query('administrator', 'admin')
+        .findOne({ username });
 
-      if (
-        adminsWithSameUsername &&
-        adminsWithSameUsername[primaryKey] !== admin[primaryKey]
-      ) {
+      if (adminsWithSameUsername && adminsWithSameUsername.id !== admin.id) {
         return ctx.badRequest(
           null,
-          ctx.request.admin
-            ? [
-                {
-                  messages: [
-                    {
-                      id: 'Auth.form.error.username.taken',
-                      field: ['username'],
-                    },
-                  ],
-                },
-              ]
-            : 'Username is already taken.'
+          formatError({
+            id: 'Auth.form.error.username.taken',
+            message: 'Username already taken',
+            field: ['username'],
+          })
         );
       }
     }
 
     const user = {
-      email: values.email,
-      username: values.username,
-      blocked: values.blocked === true ? true : false,
+      email: email,
+      username: username,
+      blocked: blocked === true ? true : false,
     };
 
-    if (values.password !== admin.password) {
-      user.password = await strapi.admin.services.auth.hashPassword(
-        values.password
-      );
+    if (password !== admin.password) {
+      user.password = await strapi.admin.services.auth.hashPassword(password);
     }
 
-    const data = await adminQueries.update(ctx.params, user);
+    const data = await strapi
+      .query('administrator', 'admin')
+      .update({ id }, user);
 
     // Send 200 `ok`
     ctx.send(data);

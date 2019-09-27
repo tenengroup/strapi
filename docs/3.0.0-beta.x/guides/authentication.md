@@ -19,8 +19,8 @@ const token = 'YOUR_TOKEN_HERE';
 axios
   .get('http://localhost:1337/posts', {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
   .then(response => {
     // Handle success.
@@ -47,7 +47,7 @@ axios
   .post('http://localhost:1337/auth/local/register', {
     username: 'Strapi user',
     email: 'user@strapi.io',
-    password: 'strapiPassword'
+    password: 'strapiPassword',
   })
   .then(response => {
     // Handle success.
@@ -75,8 +75,8 @@ import axios from 'axios';
 // Request API.
 axios
   .post('http://localhost:1337/auth/local', {
-      identifier: 'user@strapi.io',
-      password: 'strapiPassword'
+    identifier: 'user@strapi.io',
+    password: 'strapiPassword',
   })
   .then(response => {
     // Handle success.
@@ -95,11 +95,13 @@ axios
 Thanks to [Grant](https://github.com/simov/grant) and [Purest](https://github.com/simov/purest), you can easily use OAuth and OAuth2
 providers to enable authentication in your application. By default,
 Strapi comes with the following providers:
+
 - [Discord](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/discord_setup.md)
 - [Facebook](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/fb_setup.md)
 - [Google](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/google_setup.md)
 - [Github](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/github_setup.md)
 - [Twitter](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/twitter_setup.md)
+- [Instagram](https://github.com/strapi/strapi-examples/blob/master/login-react/doc/instagram_setup.md)
 
 [👀   See our complete example with detailed tutorials for each provider (with React)](https://github.com/strapi/strapi-examples/tree/master/login-react)
 
@@ -129,7 +131,7 @@ This action sends an email to a user with the link of you reset password page. T
 
 - `email` is your user email.
 - `url` is the url link that user will receive. After the user triggers a new password reset,
-it is used to redirect the user to the new-password form.
+  it is used to redirect the user to the new-password form.
 
 ```js
 import axios from 'axios';
@@ -138,7 +140,8 @@ import axios from 'axios';
 axios
   .post('http://localhost:1337/auth/forgot-password', {
     email: 'user@strapi.io',
-    url: 'http:/localhost:1337/admin/plugins/users-permissions/auth/reset-password'
+    url:
+      'http:/localhost:1337/admin/plugins/users-permissions/auth/reset-password',
   })
   .then(response => {
     // Handle success.
@@ -184,25 +187,23 @@ axios
 The `user` object is available to successfully authenticated requests.
 
 #### Usage
+
 - The authenticated `user` object is a property of `ctx.state`.
 
-
 ```js
-  create: async (ctx) => {
+create: async ctx => {
+  const { _id } = ctx.state.user;
 
-    const { _id } = ctx.state.user
+  const depositObj = {
+    ...ctx.request.body,
+    depositor: _id,
+  };
 
-    const depositObj = {
-      ...ctx.request.body,
-      depositor: _id
-    }
+  const data = await strapi.services.deposit.add(depositObj);
 
-    const data = await strapi.services.deposit.add(depositObj);
-
-    // Send 201 `created`
-    ctx.created(data);
-  }
-
+  // Send 201 `created`
+  ctx.created(data);
+};
 ```
 
 ## Adding a new provider (to the strapi project)
@@ -219,6 +220,7 @@ packages/strapi-plugin-users-permissions/admin/src/translations/en.json
 We will go step by step.
 
 ### Configure your Provider Request
+
 Configure the new provider in the `Provider.js` file at the `getProfile` function.
 
 The `getProfile` takes three params:
@@ -337,10 +339,30 @@ Add the language translation in `packages/strapi-plugin-users-permissions/admin/
 
 ```js
   'PopUpForm.Providers.discord.providerConfig.redirectURL': 'The redirect URL to add in your Discord application configurations',
-````
+```
 
 These two change will set up the popup message that appears in the UI. That's it, now you should be able to use your new provider.
 
-## Email templates
+## Templating emails
 
-[See the documentation on GitHub](https://github.com/strapi/strapi/blob/master/packages/strapi-plugin-users-permissions/docs/email-templates.md)
+By default, this plugin comes with only one template (reset password) for the moment. More templates will come later. The templates use Lodash' template() method to populate the variables.
+
+You can update these template in the **Email Templates** tab in the admin panel.
+
+### Reset Password
+
+- `USER` (object)
+  - `username`
+  - `email`
+  - ...and every other fields that you added manually in the model.
+- `TOKEN` corresponds to the token generated to be able to reset the password.
+- `URL` is the link where the user will be redirected after clicking on it in the email.
+
+### Email address confirmation
+
+- `USER` (object)
+  - `username`
+  - `email`
+  - ...and every other fields that you added manually in the model.
+- `CODE` corresponds to the CODE generated to be able confirm the user email.
+- `URL` is the Strapi backend URL that confirm the code (by default `/auth/email-confirmation`).

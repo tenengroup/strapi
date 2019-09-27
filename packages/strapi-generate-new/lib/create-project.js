@@ -7,7 +7,7 @@ const execa = require('execa');
 const ora = require('ora');
 
 const stopProcess = require('./utils/stop-process');
-const { trackUsage } = require('./utils/usage');
+const { trackUsage, captureError } = require('./utils/usage');
 const packageJSON = require('./resources/json/package.json');
 const databaseJSON = require('./resources/json/database.json.js');
 
@@ -23,6 +23,17 @@ module.exports = async function createProject(
   try {
     // copy files
     await fse.copy(join(resources, 'files'), rootPath);
+
+    // copy dot files
+    const dotFiles = await fse.readdir(join(resources, 'dot-files'));
+    await Promise.all(
+      dotFiles.map(name => {
+        return fse.copy(
+          join(resources, 'dot-files', name),
+          join(rootPath, `.${name}`)
+        );
+      })
+    );
 
     // copy templates
     await fse.writeJSON(
@@ -70,22 +81,28 @@ module.exports = async function createProject(
   };
 
   try {
-    const runner = runInstall(scope);
+    if (scope.installDependencies !== false) {
+      const runner = runInstall(scope);
 
-    runner.stdout.on('data', logInstall);
-    runner.stderr.on('data', logInstall);
+      runner.stdout.on('data', logInstall);
+      runner.stderr.on('data', logInstall);
 
-    await runner;
+      await runner;
+    }
 
     loader.stop();
     console.log(`Dependencies installed ${chalk.green('successfully')}.`);
   } catch (error) {
+    error.message = error.stderr;
+
     loader.stop();
     await trackUsage({
       event: 'didNotInstallProjectDependencies',
       scope,
-      error,
+      error: error.stderr.slice(-1024),
     });
+
+    await captureError(error);
 
     stopProcess(
       `${chalk.red(

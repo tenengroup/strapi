@@ -3,17 +3,6 @@
 const { uniq, difference, get, isUndefined, merge } = require('lodash');
 
 module.exports = async function() {
-  // Set if is admin destination for middleware application.
-  this.app.use(async (ctx, next) => {
-    if (ctx.request.header['origin'] === 'http://localhost:4000') {
-      ctx.request.header['x-forwarded-host'] = 'strapi';
-    }
-
-    ctx.request.admin = ctx.request.header['x-forwarded-host'] === 'strapi';
-
-    await next();
-  });
-
   /** Utils */
 
   const middlewareConfig = this.config.middleware;
@@ -34,6 +23,8 @@ module.exports = async function() {
 
   // Method to initialize middlewares and emit an event.
   const initialize = middlewareKey => {
+    if (this.middleware[middlewareKey].loaded === true) return;
+
     const module = this.middleware[middlewareKey].load;
 
     return new Promise((resolve, reject) => {
