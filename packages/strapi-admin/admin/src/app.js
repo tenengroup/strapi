@@ -93,8 +93,6 @@ Object.keys(plugins).forEach(plugin => {
   }
 });
 
-  };
-
 // TODO
 const remoteURL = (() => {
   // Relative URL (ex: /dashboard)
