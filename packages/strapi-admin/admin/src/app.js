@@ -57,7 +57,7 @@ const MOUNT_NODE =
 
 
   // TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
-const customPlugins = ['tg-standalone-catalog'];
+const customPlugins = ['tg-standalone-catalog', 'tg-master-catalog'];
 
 customPlugins.forEach(plugin => {
   set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
