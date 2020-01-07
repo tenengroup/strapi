@@ -20,8 +20,8 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
-import { merge } from 'lodash';
 import { Fonts } from '@buffetjs/styles';
+import { merge, set } from 'lodash';
 import {
   freezeApp,
   pluginLoaded,
@@ -49,11 +49,21 @@ import history from './utils/history';
 
 import plugins from './plugins';
 
+import { request } from 'strapi-helper-plugin';
+
 const initialState = {};
 const store = configureStore(initialState, history);
 const { dispatch } = store;
 const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
+
+
+  // TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
+const customPlugins = ['tg-standalone-catalog', 'tg-master-catalog'];
+
+customPlugins.forEach(plugin => {
+  set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
+});
 
 Object.keys(plugins).forEach(plugin => {
   const currentPlugin = plugins[plugin];
