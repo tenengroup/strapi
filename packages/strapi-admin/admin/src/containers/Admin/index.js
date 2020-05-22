@@ -95,6 +95,22 @@ export class Admin extends React.Component {
     return this.hasApluginNotReady(this.props);
   };
 
+  renderLayout = () => {
+    const {
+      global: { plugins },
+    } = this.props;
+
+    const pluginId = plugins['tg-layout'].id;
+
+    const props = {
+      match: {
+        params: { pluginId },
+      }
+    }
+
+    return <PluginDispatcher {...this.props} {...props} {...this.helpers} />;
+  }
+
   renderInitializers = () => {
     const {
       global: { plugins },
@@ -154,14 +170,9 @@ export class Admin extends React.Component {
         updatePlugin={this.props.updatePlugin}
       >
         <Wrapper>
-          <LeftMenu version={strapiVersion} plugins={plugins} />
-          <NavTopRightWrapper>
-            {/* Injection zone not ready yet */}
-            <Logout />
-            <LocaleToggle isLogged />
-          </NavTopRightWrapper>
+          {this.renderLayout()}
+          {/* <LeftMenu version={strapiVersion} plugins={plugins} /> */}
           <div className="adminPageRightWrapper">
-            <Header />
             <Content>
               <Switch>
                 <Route

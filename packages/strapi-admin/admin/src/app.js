@@ -58,12 +58,12 @@ const MOUNT_NODE =
   document.getElementById('app') || document.createElement('div');
 
 
-  // TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
-const customPlugins = ['tg-standalone-catalog', 'tg-master-catalog', 'tg-site-catalog'];
+// TODO: temporary. Need to fix plugin loading from API for the case when user is logged out
+const customPlugins = require(`../../../../../tg-catalog/plugins`).default
 
-customPlugins.forEach(plugin => {
-  set(plugins, plugin, require(`../../../../../tg-catalog/plugins/${plugin}/admin/src`).default);
-});
+for (let [pluginName, pluginEntry] of Object.entries(customPlugins)) {
+  set(plugins, pluginName, pluginEntry);
+}
 
 Object.keys(plugins).forEach(plugin => {
   const currentPlugin = plugins[plugin];
