@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { isEmpty } from 'lodash';
 import { useDrop } from 'react-dnd';
@@ -26,6 +26,9 @@ function SelectMany({
   targetModel,
   value,
 }) {
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  
   const [, drop] = useDrop({ accept: ItemTypes.RELATION });
   const findRelation = id => {
     const relation = value.filter(c => {
@@ -58,9 +61,11 @@ function SelectMany({
   return (
     <>
       <Select
+        closeMenuOnSelect={false}
         isDisabled={isDisabled}
         id={name}
         filterOption={(candidate, input) => {
+          const value = valueRef.current;
           if (!isEmpty(value)) {
             const isSelected =
               value.findIndex(item => item.id === candidate.value.id) !== -1;
@@ -111,7 +116,7 @@ function SelectMany({
 }
 
 SelectMany.defaultProps = {
-  move: () => {},
+  move: () => { },
   value: null,
 };
 
