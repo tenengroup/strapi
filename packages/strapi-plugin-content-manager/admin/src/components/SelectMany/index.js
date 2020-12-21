@@ -28,7 +28,7 @@ function SelectMany({
 }) {
   const valueRef = useRef(value);
   valueRef.current = value;
-  
+
   const [, drop] = useDrop({ accept: ItemTypes.RELATION });
   const findRelation = id => {
     const relation = value.filter(c => {
@@ -58,6 +58,43 @@ function SelectMany({
     matchFrom: 'any',
   };
 
+  const selectAllOption = {
+    label: "Select All",
+    value: "*"
+  }
+
+  const isSelectAllSelected = () => {
+    return valueRef.current.length === options.length;
+  }
+  const getOptions = () => isSelectAllSelected() ? [] : [selectAllOption, ...options];
+  const onChange = (newValue, actionMeta) => {
+    const { action, option, removedValue } = actionMeta;
+    if (action === "select-option" && option.value === selectAllOption.value) {
+      for (const optionToAdd of options) {
+        if (valueRef.current.every(x => x.id !== optionToAdd.value.id)) {
+          addRelation([optionToAdd], actionMeta);
+        }
+      }
+    } else if (
+      (action === "deselect-option" &&
+        option.value === selectAllOption.value) ||
+      (action === "remove-value" &&
+        removedValue.value === selectAllOption.value)
+    ) {
+      addRelation([], actionMeta);
+    } else if (
+      actionMeta.action === "deselect-option" &&
+      isSelectAllSelected()
+    ) {
+      addRelation(
+        options.filter(({ value }) => value !== option.value),
+        actionMeta
+      );
+    } else {
+      addRelation(newValue || [], actionMeta);
+    }
+  };
+
   return (
     <>
       <Select
@@ -83,12 +120,12 @@ function SelectMany({
         isLoading={isLoading}
         isMulti
         isSearchable
-        options={options}
-        onChange={addRelation}
+        onChange={onChange}
         onInputChange={onInputChange}
         onMenuClose={onMenuClose}
         onMenuScrollToBottom={onMenuScrollToBottom}
         placeholder={placeholder}
+        options={getOptions()}
         value={[]}
       />
 
