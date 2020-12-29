@@ -67,12 +67,6 @@ function SelectWrapper({
           return { value: obj, label: obj[mainField] };
         });
 
-        if (!isEmpty(params._q)) {
-          setOptions(formattedData);
-
-          return;
-        }
-
         setOptions(prevState =>
           prevState.concat(formattedData).filter((obj, index) => {
             const objIndex = prevState.findIndex(

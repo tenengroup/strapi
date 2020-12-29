@@ -59,31 +59,32 @@ function SelectMany({
   };
 
   const selectAllOption = {
-    label: "Select All",
-    value: "*"
-  }
+    label: 'Select All',
+    value: '*',
+  };
 
   const isSelectAllSelected = () => {
     return valueRef.current.length === options.length;
-  }
-  const getOptions = () => isSelectAllSelected() ? [] : [selectAllOption, ...options];
+  };
+  const getOptions = () =>
+    isSelectAllSelected() ? [] : [selectAllOption, ...options];
   const onChange = (newValue, actionMeta) => {
     const { action, option, removedValue } = actionMeta;
-    if (action === "select-option" && option.value === selectAllOption.value) {
+    if (action === 'select-option' && option.value === selectAllOption.value) {
       for (const optionToAdd of options) {
         if (valueRef.current.every(x => x.id !== optionToAdd.value.id)) {
           addRelation([optionToAdd], actionMeta);
         }
       }
     } else if (
-      (action === "deselect-option" &&
+      (action === 'deselect-option' &&
         option.value === selectAllOption.value) ||
-      (action === "remove-value" &&
+      (action === 'remove-value' &&
         removedValue.value === selectAllOption.value)
     ) {
       addRelation([], actionMeta);
     } else if (
-      actionMeta.action === "deselect-option" &&
+      actionMeta.action === 'deselect-option' &&
       isSelectAllSelected()
     ) {
       addRelation(
@@ -91,7 +92,9 @@ function SelectMany({
         actionMeta
       );
     } else {
-      addRelation(newValue || [], actionMeta);
+      if (newValue) {
+        addRelation(newValue || [], actionMeta);
+      }
     }
   };
 
@@ -153,7 +156,7 @@ function SelectMany({
 }
 
 SelectMany.defaultProps = {
-  move: () => { },
+  move: () => {},
   value: null,
 };
 
