@@ -2,14 +2,14 @@ import styled from 'styled-components';
 
 const ListWrapper = styled.div`
   overflow: hidden;
-  max-height: 116px;
+  max-height: 274px;
 
   > ul {
     margin: 0 -20px 0;
     padding: 0 20px !important;
     list-style: none !important;
     overflow: auto;
-    max-height: 110px;
+    max-height: 270px;
   }
 `;
 
